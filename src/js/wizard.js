@@ -262,7 +262,8 @@
 		//Try to retrieve the current step number from localStorage if it wasn't set in options
 		if(typeof options.step === 'undefined')
 		{
-			this.step = this._possiblyGetLocalStorageStep();
+			var temp_step = this._possiblyGetLocalStorageStep(); // try to retrieve it
+			if(!isNaN(temp_step)) this.step = temp_step; // if success (not a NaN), set it
 		}
 
 		$(window).on('scroll.Wizard', function(){that._rescrollAllowed = false;});
@@ -1134,26 +1135,42 @@
 		},
 		
 		/**
-		 * Save the current step number into local storage
+		 * Save the current step number into local storage or cookies as a fallback
 		 *
 		 * @memberOf Wizard
 		 * @type     {Function}
 		 */
 		_updateLocalStorageStep: function()
 		{
+			// Check if localStorage is supported
 			if(window.localStorage) {window.localStorage.setItem(this.settings.localStorageStepKey, this.step);}
+			// Use cookies as a fallback
+			else if(document.cookie) {document.cookie = this.settings.localStorageStepKey+'='+this.step;}
 		},
 		
 		/**
-		 * Get the step number from local storage or return current step number if it's impossible
+		 * Try to get the step number from local storage or cookies
 		 *
 		 * @memberOf Wizard
 		 * @type     {Function}
+		 * @returns  {Number} Step number or NaN if not possible
 		 */
 		_possiblyGetLocalStorageStep: function()
 		{
-			if(window.localStorage) {return parseInt(window.localStorage.getItem(this.settings.localStorageStepKey) || this.step);}
-			else { return this.step }
+			if(window.localStorage) { // localStorage supported, try to retrieve the step number
+				return parseInt(window.localStorage.getItem(this.settings.localStorageStepKey)); // returns NaN if not set before
+				
+			} else if(document.cookie) {  // try to retrieve the number from cookies
+				var keyIndex = document.cookie.indexOf(this.settings.localStorageStepKey);
+				if(keyIndex === -1) return NaN; // Not found
+				
+				var semicolonIndex = document.cookie.indexOf(';', keyIndex),
+					value = document.cookie.substring(keyIndex, semicolonIndex).split('=')[1];
+				return parseInt(value);
+				
+			} else { // both not supported
+				return NaN;
+			}
 		},
 	
 		/**
