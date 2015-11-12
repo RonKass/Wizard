@@ -144,6 +144,7 @@
 			freezeKeyBinding      : false,   //Temporary freezing of key binding
 			abortOnInvalidStep    : false,   //Aborts Wizard when a step is Invalid
 			deactivationDelay     : 250,     //Allows a small delay in deactivation, to let animations run their course 
+			localStorageStepKey   : 'wizardCurrentStep', // Key used to store the current step value in localStorage
 
 			//Structural
 			template              : 'wizardWide',
@@ -257,6 +258,13 @@
 				}
 			})
 		});
+		
+		//Try to retrieve the current step number from localStorage if it wasn't set in options
+		if(typeof options.step === 'undefined')
+		{
+			var temp_step = this._possiblyGetLocalStorageStep(); // try to retrieve it
+			if(!isNaN(temp_step)) this.step = temp_step; // if success (not a NaN), set it
+		}
 
 		$(window).on('scroll.Wizard', function(){that._rescrollAllowed = false;});
 
@@ -1125,6 +1133,45 @@
 
 			return this; //Allow operation chaining
 		},
+		
+		/**
+		 * Save the current step number into local storage or cookies as a fallback
+		 *
+		 * @memberOf Wizard
+		 * @type     {Function}
+		 */
+		_updateLocalStorageStep: function()
+		{
+			// Check if localStorage is supported
+			if(window.localStorage) {window.localStorage.setItem(this.settings.localStorageStepKey, this.step);}
+			// Use cookies as a fallback
+			else if(document.cookie) {document.cookie = this.settings.localStorageStepKey+'='+this.step;}
+		},
+		
+		/**
+		 * Try to get the step number from local storage or cookies
+		 *
+		 * @memberOf Wizard
+		 * @type     {Function}
+		 * @returns  {Number} Step number or NaN if not possible
+		 */
+		_possiblyGetLocalStorageStep: function()
+		{
+			if(window.localStorage) { // localStorage supported, try to retrieve the step number
+				return parseInt(window.localStorage.getItem(this.settings.localStorageStepKey)); // returns NaN if not set before
+				
+			} else if(document.cookie) {  // try to retrieve the number from cookies
+				var keyIndex = document.cookie.indexOf(this.settings.localStorageStepKey);
+				if(keyIndex === -1) return NaN; // Not found
+				
+				var semicolonIndex = document.cookie.indexOf(';', keyIndex),
+					value = document.cookie.substring(keyIndex, semicolonIndex).split('=')[1];
+				return parseInt(value);
+				
+			} else { // both not supported
+				return NaN;
+			}
+		},
 	
 		/**
 		 * Advances the step forward
@@ -1135,6 +1182,7 @@
 		_nextStep: function() 
 		{
 			if (this.step < this.steps.length - 1) {this.step += 1;}
+			this._updateLocalStorageStep();
 		},
 	
 		/**
@@ -1146,6 +1194,7 @@
 		_prevStep: function() 
 		{
 			if (this.step > 0) {this.step -= 1;}
+			this._updateLocalStorageStep();
 		},
 
 		/**
@@ -1302,6 +1351,7 @@
 	
 			// Resets the step to the settings' initial step
 			this.step = this.settings.step;
+			this._updateLocalStorageStep();
 			
 			this.deactivate();
 
@@ -1322,8 +1372,26 @@
 			var step = this.getCurrentStep();
 			
 			var stepURL = step.url || step._urlPrevious;
-			if (stepURL) 
-				{window.location=stepURL;}
+			if (stepURL) {
+				// Update URL only if it's actually different so that the page doesn't refresh if not needed
+				if(window.location.href !== stepURL) {
+					var newPath = stepURL.split('#')[0],
+						addressBefore = window.location.href.split('#')[0],
+						addressAfter;
+					
+					// Check what the address will be after changing 
+					if(newPath === '') { // stepURL: #hash
+						addressAfter = addressBefore;
+					} else if(newPath[0] === '/') { // stepURL: /foo/bar#hash
+						addressAfter = window.location.origin + newPath;
+					} else { // stepURL: http://example.com/foo/bar#something
+						addressAfter = newPath;
+					}
+					
+					window.location = stepURL;
+					if(addressBefore !== addressAfter) return; // redirecting to next page, no need to view the step box
+				}
+			}
 			else
 				{step._urlPrevious=window.location.toString();} //Storing the step's current URL in case it doesn't have one yet.
 
