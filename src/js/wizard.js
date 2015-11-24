@@ -734,14 +734,16 @@
 					else if (spaceLeft   *4  >= allSides) {position = 'left';}
 					else if (spaceRight  *4  >= allSides) {position = 'right';}
 
+					var bulge_h = (stepWidth -frameWidth )/2;
+					var bulge_v = (stepHeight-frameHeight)/2;
 					switch (position)
 					{//Box might not fit next to the idea position (might shift off screen)
 						case 'top'    :
 						case 'bottom' :
-							if ((spaceRight < stepWidth/2) || (spaceLeft < stepWidth/2)) 
+							if ((spaceRight < bulge_h) || (spaceLeft < bulge_h)) 
 							{
-								if      ((spaceRight > stepWidth/2) && (spaceTop > stepHeight/2) && (spaceBottom > stepHeight/2)) {position='right';}
-								else if ((spaceLeft  > stepWidth/2) && (spaceTop > stepHeight/2) && (spaceBottom > stepHeight/2)) {position='left';}
+								if      ((spaceRight > bulge_h) && (spaceTop > bulge_v) && (spaceBottom > bulge_v)) {position='right';}
+								else if ((spaceLeft  > bulge_h) && (spaceTop > bulge_v) && (spaceBottom > bulge_v)) {position='left';}
 								else
 								{
 									nudge = (spaceRight>spaceLeft)?"right":"left";
@@ -752,8 +754,8 @@
 						case 'right'  :
 							if ((spaceTop < stepHeight/2) || (spaceBottom < stepHeight/2)) 
 							{
-								if      ((spaceTop    > stepHeight/2) && (spaceLeft > stepWidth/2) && (spaceRight > stepWidth/2)) {position='top';}
-								else if ((spaceBottom > stepHeight/2) && (spaceLeft > stepWidth/2) && (spaceRight > stepWidth/2)) {position='bottom';}
+								if      ((spaceTop    > bulge_v) && (spaceLeft > bulge_h) && (spaceRight > bulge_h)) {position='top';}
+								else if ((spaceBottom > bulge_v) && (spaceLeft > bulge_h) && (spaceRight > bulge_h)) {position='bottom';}
 								else
 								{
 									nudge = (spaceTop>spaceBottom)?"top":"bottom";
