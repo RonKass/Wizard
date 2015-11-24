@@ -28,6 +28,13 @@ module.exports = function(grunt) {
 		},
 
 		
+		copy: {
+			Wizard: {
+				files: [
+					{src: ['src/js/wizard.js'], dest: 'dist/wizard.js'},
+				],
+			},
+		},
 		uglify: {
 			Wizard: {
 				options: {
@@ -63,9 +70,10 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-jsonlint');
 	grunt.loadNpmTasks('grunt-contrib-compass');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
-	grunt.loadNpmTasks('grunt-contrib-concat');
+	//grunt.loadNpmTasks('grunt-contrib-concat');
+	grunt.loadNpmTasks('grunt-contrib-copy');
 
-	grunt.registerTask( "lint", [ "jshint", "jsonlint", "uglify" ] );
+	grunt.registerTask( "lint", [ "jshint", "jsonlint", "copy", "uglify" ] );
 	
 	grunt.registerTask('default', ["lint", "compass"]);
 };
