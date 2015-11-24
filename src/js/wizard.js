@@ -199,8 +199,8 @@
 		
 		
 		//Initiates template blocks in settings structure
-		this.settings.floatingStepHTML = this.settings.floatingStepHTML || (_templates[this.settings.template]?_templates[this.settings.template].floatingStepHTML:null) || _templates['wizardWide'].floatingStepHTML;
-		this.settings.anchoredStepHTML = this.settings.anchoredStepHTML || (_templates[this.settings.template]?_templates[this.settings.template].anchoredStepHTML:null) || _templates['wizardWide'].anchoredStepHTML;
+		this.settings.floatingStepHTML = this.settings.floatingStepHTML || (_templates[this.settings.template]?_templates[this.settings.template].floatingStepHTML:null) || _templates.wizardWide.floatingStepHTML;
+		this.settings.anchoredStepHTML = this.settings.anchoredStepHTML || (_templates[this.settings.template]?_templates[this.settings.template].anchoredStepHTML:null) || _templates.wizardWide.anchoredStepHTML;
 
 		//Copy initial Wizard settings
 		this.step        = this.settings.step;
@@ -245,9 +245,9 @@
 		globalCallbacks.forEach(function(callback,index)
 		{
 			if ((that.settings[callback]) && (!window.WizardTools.isFunction(that.settings[callback])))
-			{
+			{/*jshint -W061 */
 				try {that.settings[callback] = eval("("+that.settings[callback]+")");}
-				catch(e) {this.console.error("Can not compile callback:"+callback); this.console.error(that.settings[callback])}
+				catch(e) {this.console.error("Can not compile callback:"+callback); this.console.error(that.settings[callback]);}
 			}
 		});
 
@@ -259,11 +259,11 @@
 			that.steps.forEach(function(step,index)
 			{
 				if ((that.steps[index][callback]) && (!window.WizardTools.isFunction(that.steps[index][callback])))
-				{
+				{/*jshint -W061 */
 					try {that.steps[index][callback] = eval("("+that.steps[index][callback]+")");}
-					catch(e) {this.console.error("Can not compile callback:"+callback); this.console.error(that.steps[index][callback])}
+					catch(e) {this.console.error("Can not compile callback:"+callback); this.console.error(that.steps[index][callback]);}
 				}
-			})
+			});
 		});
 
 		$(window).on('scroll.Wizard', function(){that._rescrollAllowed = false;});
@@ -341,7 +341,7 @@
 				$floatingStepBox.on('mousedown.Wizard', function(){return false;});
 			}
 			//Attach events (close/next/prev)
-			this._attachStepBoxEvents($floatingStepBox);
+			this._attachStepBoxEvents(this.$floatingStepBox);
 
 		},
 		
@@ -356,7 +356,7 @@
 			if (
 				(!this.settings.anchoredStepContainer) ||
 				(!$(this.settings.anchoredStepContainer))
-			) {return} //Doesn't create anchoredStepBox if not positioned or anchor doesn't exist
+			) {return;} //Doesn't create anchoredStepBox if not positioned or anchor doesn't exist
 			
 			this.$anchoredStepBox = $('.anchoredStep');
 			if (typeof this.$anchoredStepBox.get(0) === 'undefined') 
@@ -392,7 +392,7 @@
 				this.$overlay = $overlay;
 				
 				var that = this;
-				$overlay.on('mousedown.Wizard', function(){that.settings.onOverlayClick(that)});
+				$overlay.on('mousedown.Wizard', function(){that.settings.onOverlayClick(that);});
 			}
 		},
 
@@ -465,7 +465,7 @@
 		 */
 		_keyEvent: function(e) 
 		{
-			if (this.freezeKeyBinding) {return} //Ignores keyEvents if temporarily frozen
+			if (this.freezeKeyBinding) {return;} //Ignores keyEvents if temporarily frozen
 
 			var keys = _constants.keyboard;
 			switch (e.which) 
@@ -477,7 +477,8 @@
 				case keys.arrowDown  : this.next(); break;
 				case keys.space      :
 					e.preventDefault(); //Overrides default space behavior of scrolling the page down
-					(this.isCountdown)?this.pause():this.resume(); break;
+					if (this.isCountdown) {this.pause();} else {this.resume();} 
+					break;
 			}
 		},
 		
@@ -534,7 +535,7 @@
 			var position = step._positionActual || step.position;
 
 			var highlightOffset = this._highlightAdjustment.currentOffset;
-			if (!highlightOffset) {return} //Can't scroll (yet), as highlight is not (yet) set
+			if (!highlightOffset) {return;} //Can't scroll (yet), as highlight is not (yet) set
 			var highlightSize   = this._highlightAdjustment.currentSize;
 			
 			var $box = this.$floatingStepBox;
@@ -579,8 +580,8 @@
 					}
 				}
 
-				if (T<0) {T=0};
-				if (L<0) {L=0};
+				if (T<0) {T=0;}
+				if (L<0) {L=0;}
 				this.$root.animate({scrollTop:T,scrollLeft:L}, this.settings.scrollDuration);
 			}
 		},
@@ -619,9 +620,9 @@
 		_setStepBox: function($box, step) 
 		{
 			// toggle used settings
-			var showClose      = (step.showClose     !=undefined)?step.showClose      : this.settings.showClose;
-			var showNavigation = (step.showNavigation!=undefined)?step.showNavigation : this.settings.showNavigation;
-			var showHeader     = (step.showHeader    !=undefined)?step.showHeader     : this.settings.showHeader;
+			var showClose      = (step.showClose     !== undefined)?step.showClose      : this.settings.showClose;
+			var showNavigation = (step.showNavigation!== undefined)?step.showNavigation : this.settings.showNavigation;
+			var showHeader     = (step.showHeader    !== undefined)?step.showHeader     : this.settings.showHeader;
 	
 			// labels
 			var closeLabel  = step.closeLabel  || this.settings.closeLabel;
@@ -644,12 +645,13 @@
 			$box
 				.find('.wizardPrev')
 				.html(prevLabel)
-				.toggle( showNavigation && !this.isFirst() && this.isPrevAllowed(step) );
+				.toggleClass("wizardStepDisabled", !(showNavigation && !this.isFirst() && this.isPrevAllowed(step)) );
 	
 			$box
 				.find('.wizardNext')
 				.html(this.isLast() ? finishLabel : nextLabel)
-				.toggle( showNavigation && this.isNextAllowed(step) ); //this.isLast() is not needed, as the next button becomes the "Finish" in the last step
+				.toggleClass('wizardFinish',this.isLast())
+				.toggleClass("wizardStepDisabled", !( showNavigation && this.isNextAllowed(step)) ); //this.isLast() is not needed, as the next button becomes the "Finish" in the last step
 	
 			$box
 				.find('.wizardClose')
@@ -695,9 +697,9 @@
 			//Verifies position... or chooses one ('auto', if non specified or 'anchor' without an anchor element)
 			var position = step.position;
 			if ( ($.inArray(position, _allowedPositions) < 0) || ((position === 'anchor') && (!this.$anchoredStepBox)) )
-				{position = 'auto'};
+				{position = 'auto';}
 
-			if (position === 'anchor') {return};
+			if (position === 'anchor') {return;}
 
 			var $box             = this.$floatingStepBox;
 			var stepWidth        = $box && $box.outerWidth();
@@ -706,10 +708,10 @@
 			var frameWidth, frameHeight,
 			    shiftH, shiftV,
 			    pH, pV;
-			var $frameContainer  = this._highlightAdjustment.frame;
+			var $frameContainer  = this._highlightAdjustment.frameContainer;
 			
 			if (((position === "auto") && (this._highlightAdjustment.object === '#')) || (!$frameContainer)) 
-				{position = "screenCenter"} //If no highlight frame to attach to, put the Step box at the screen center
+				{position = "screenCenter";} //If no highlight frame to attach to, put the Step box at the screen center
 			else
 			{//Calculate position related variables
 				frameWidth       = $frameContainer && this._highlightAdjustment.currentSize.width;
@@ -717,18 +719,18 @@
 				
 				if (position === 'auto')
 				{//Chooses position based on the most available place in the surrounding space
-					if (!$frameContainer) {return}
+					if (!$frameContainer) {return;}
 					var $body = this.$body;
 					var spaceTop    = $frameContainer.position().top;
 					var spaceLeft   = $frameContainer.position().left;
 					var spaceBottom = $body.height() - $frameContainer.position().top  - frameHeight;
 					var spaceRight  = $body.width()  - $frameContainer.position().left - frameWidth;
-					var allSides = spaceTop + spaceLeft + spaceBottom + spaceRight 
+					var allSides = spaceTop + spaceLeft + spaceBottom + spaceRight; 
 					
-					if      (spaceTop *4  >= allSides) {position = 'top'}
-					else if (spaceLeft*4  >= allSides) {position = 'left'}
-					else if (spaceRight*4 >= allSides) {position = 'right'}
-					else                               {position = 'bottom'}
+					if      (spaceTop *4  >= allSides) {position = 'top';}
+					else if (spaceLeft*4  >= allSides) {position = 'left';}
+					else if (spaceRight*4 >= allSides) {position = 'right';}
+					else                               {position = 'bottom';}
 				}
 				step._positionActual = position; //_positionActual may differ if position was invalid or was set to 'auto'
 				
@@ -756,7 +758,7 @@
 
 			//Sets the right position class
 			this.$floatingStepContainer.
-				removeClass(_allowedPositions.map(function(e){return 'wizardPos_'+e}).join(' ')).
+				removeClass(_allowedPositions.map(function(e){return 'wizardPos_'+e;}).join(' ')).
 				addClass("wizardPos_"+position);
 		},
 
@@ -811,7 +813,7 @@
 		 */
 		_addAnimation: function(step) 
 		{
-			if (step.position === 'anchor') {return}
+			if (step.position === 'anchor') {return;}
 			//ELSE
 			var animation = step.animation || this.settings.defaultAnimation;
 			if ($.inArray(animation, _allowedAnimations) >= 0) 
@@ -850,8 +852,8 @@
 					{width: '100%'}, 
 					duration, 
 					'linear', 
-					function() {that.$countdowns.each(function(index,countdown){$(countdown).width(0);})}
-				)
+					function() {that.$countdowns.each(function(index,countdown){$(countdown).width(0);});}
+				);
 			});
 		},
 	
@@ -1026,7 +1028,7 @@
 		deactivate: function()
 		{
 			var that = this;
-			this._deactivationTimer = new Timer(function() {that.$overlay.addClass('inactive')}, this.settings.deactivationDelay);
+			this._deactivationTimer = new Timer(function() {that.$overlay.addClass('inactive');}, this.settings.deactivationDelay);
 			
 			return this;
 		},
@@ -1389,7 +1391,7 @@
 			{
 				//First, redirect if needed
 				var CurrentLocation_Absolute = window.location.toString();
-				if (stepURL !== CurrentLocation_Absolute) {location=stepURL;}
+				if (stepURL !== CurrentLocation_Absolute) {window.location=stepURL;}
 				
 				var stepURL_Absolute = document.createElement('a'); 
 				stepURL_Absolute.href = stepURL;
@@ -1398,14 +1400,14 @@
 				var CurrentLocation_Anchorless = CurrentLocation_Absolute.replace(/#.*$/,'');
 
 				if (stepURL_Anchorless !== CurrentLocation_Anchorless)
-					{return} //absolute redirect - No need to present the step upon a page absolute redirtect (as the new page will be loaded shortly)
+					{return;} //absolute redirect - No need to present the step upon a page absolute redirtect (as the new page will be loaded shortly)
 			}
 			else
 				{step._urlPrevious=window.location.toString();} //Storing the step's current URL in case it doesn't have one yet.
 
 			//First, quickly check if we even need this step
 			var autoNextMet = false;
-			try {autoNextMet = step.autoNext()} catch(e) {};
+			try {autoNextMet = step.autoNext();} catch(e) {}
 			if (autoNextMet) {return this[this.direction]();}
 			//ELSE
 	
@@ -1428,12 +1430,13 @@
 			this._rescrollAllowed = true; //Allows rescroll
 
 			var duration   = step.duration     || this.settings.autoCountdownDuration;
-			if (duration<100) {duration = duration * 1000} //duration under 100 is assumed to be seconds, and not milliseconds
+			if (duration<100) {duration = duration * 1000;} //duration under 100 is assumed to be seconds, and not milliseconds
+
+			var that = this;
 
 			this._hideCountDowns();
 			if (duration && (duration >= 0)) 
 			{//set countdown to next Step, if duration is positive
-				var that = this;
 				this._showCountDowns(duration);
 				this._countdown = new Timer(function() {that.next();}, duration);
 				this.isCountdown = true;
@@ -1449,16 +1452,15 @@
 			if (window.WizardTools.isFunction(step.autoNext)) 
 			{
 				if (this._autoNext && this._autoNext.handler)
-					{clearInterval(this._autoNext.handler); } //Clear a previous interval, just in case
+					{clearInterval(this._autoNext.handler);} //Clear a previous interval, just in case
 				
-				var that = this;
 				this._autoNext = {
 					evaluation : step.autoNext,
 					handler    : setInterval(
 						function()
 						{
 							var autoNextMet;
-							try {autoNextMet = that._autoNext.evaluation()} catch(e) {};
+							try {autoNextMet = that._autoNext.evaluation();} catch(e) {}
 							if (autoNextMet) 
 							{
 								clearInterval(that._autoNext.handler);
@@ -1468,7 +1470,7 @@
 						},
 						_constants.adjustmentsInterval
 					),
-				}
+				};
 			}
 
 			return this; //Allow operation chaining
@@ -1508,7 +1510,7 @@
 		isPrevAllowed: function(step) 
 		{
 			step = step || this.getCurrentStep();
-			var prevAllowed = (step.allowPrev != undefined)?step.allowPrev:this.settings.allowPrev;
+			var prevAllowed = (step.allowPrev !== undefined)?step.allowPrev:this.settings.allowPrev;
 			if (typeof prevAllowed === 'function') {prevAllowed = prevAllowed.call(step);}
 			return prevAllowed;
 		},
@@ -1523,7 +1525,7 @@
 		isNextAllowed: function(step) 
 		{
 			step = step || this.getCurrentStep();
-			var nextAllowed = (step.allowNext != undefined)?step.allowNext:this.settings.allowNext;
+			var nextAllowed = (step.allowNext !== undefined)?step.allowNext:this.settings.allowNext;
 			if (typeof nextAllowed === 'function') {nextAllowed = nextAllowed.call(step);}
 			return nextAllowed;
 		},
@@ -1599,7 +1601,7 @@
 										if (!that._highlightAdjustment.adjustHandler) //Sets the highlight adjustment interval
 										{//Initiates adjustment interval
 											that._highlightAdjustment.adjustHandler = setInterval(
-												function(that){return function(){that._adjustHighlight()}}(that),
+												function(that){return function(){that._adjustHighlight();};}(that),
 												_constants.adjustmentsInterval
 											);
 										}
@@ -1620,7 +1622,7 @@
 				}
 			}
 			
-			if ((typeof object === 'object') && (!(object.get(0) === undefined)))
+			if ((typeof object === 'object') && (object.get(0) !== undefined))
 			{//Object exists AND is visible
 				triggerHighlight = true; //Trigger highlight below...
 
@@ -1642,7 +1644,7 @@
 				if (!this._highlightAdjustment.adjustHandler) 
 				{//Sets the adjustment interval
 					this._highlightAdjustment.adjustHandler = setInterval(
-						function(that){return function(){that._adjustHighlight()}}(this),
+						function(that){return function(){that._adjustHighlight();};}(this),
 						_constants.adjustmentsInterval
 					);
 				}
@@ -1684,12 +1686,14 @@
 			}
 			this._highlightAdjustment = struct;
 			
+			var x,y,w,h;
+			
 			if (struct.object === undefined)
 				{return;} //No highlight object to attach to
 			else if (struct.object === '#')
 			{//No-object - Move the highlight outside of the screen
 				//Adjust the surrounding Objects
-				var x='50%', y=0, w=0, h=0;
+				x='50%'; y=0; w=0; h=0;
 				struct.top.css   ({                   height:y          });
 				struct.bottom.css({top:y+h                              });
 				struct.left.css  ({top:y,             height:h, width:x });
@@ -1705,26 +1709,27 @@
 			{
 				var object = struct.object;
 				var step = this.getCurrentStep();
+				var step_offset = step.offset || {};
 				
-				var offset_left   = (step.offset.left   || this.settings.offset.left);
-				var offset_top    = (step.offset.top    || this.settings.offset.top);
-				var offset_width  = (step.offset.right  || this.settings.offset.right) + offset_left;
-				var offset_height = (step.offset.bottom || this.settings.offset.bottom) + offset_top;
+				var offset_left   = (step_offset.left   || this.settings.offset.left);
+				var offset_top    = (step_offset.top    || this.settings.offset.top);
+				var offset_width  = (step_offset.right  || this.settings.offset.right) + offset_left;
+				var offset_height = (step_offset.bottom || this.settings.offset.bottom) + offset_top;
 	
 				var offset = object.offset();
-				var x = parseInt(offset.left)-offset_left;
-				var y = parseInt(offset.top)-offset_top;
-				var w = parseInt(object.outerWidth())+offset_width;
-				var h = parseInt(object.outerHeight())+offset_height;
+				x = parseInt(offset.left)-offset_left;
+				y = parseInt(offset.top)-offset_top;
+				w = parseInt(object.outerWidth())+offset_width;
+				h = parseInt(object.outerHeight())+offset_height;
 	
 				//change in offset?
 				if (
-						(!struct.currentOffset)                     ||
-						(!struct.currentSize)                       ||
-						( struct.currentOffset.top  != offset.top ) ||
-						( struct.currentOffset.left != offset.left) ||
-						( struct.currentSize.width  != w          ) ||
-						( struct.currentSize.height != h          )
+						(!struct.currentOffset)                      ||
+						(!struct.currentSize)                        ||
+						( struct.currentOffset.top  !== offset.top ) ||
+						( struct.currentOffset.left !== offset.left) ||
+						( struct.currentSize.width  !== w          ) ||
+						( struct.currentSize.height !== h          )
 					)
 				{
 					//Adjust the surrounding Objects
@@ -1759,7 +1764,7 @@
 	 * @param {string}         anchoredStep HTML
 	 */
 	Wizard.registerTemplate = function(templateName, floatingStepHTML, anchoredStepHTML)
-		{_templates[templateName] = {floatingStepHTML:floatingStepHTML, anchoredStepHTML:anchoredStepHTML}};
+		{_templates[templateName] = {floatingStepHTML:floatingStepHTML, anchoredStepHTML:anchoredStepHTML};};
 		
 	Wizard.registerTemplate
 	(

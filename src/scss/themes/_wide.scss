@@ -71,8 +71,9 @@ $wizardButtons_PaddingWidth : 7px;
 	.wizardNext:hover,
 	.wizardClose:hover {background:#666; color:white;}
 
-	.wizardCountDown {background: #80d0ff;}
+	.wizardStepDisabled {display:none;}
 	
+	.wizardCountDown {background: #80d0ff;}
 	
 	&.anchoredStep {
 		width: 100%;

@@ -47,4 +47,6 @@ Temporary Items
 #Dev environment ignore
 .settings/
 .sass-cache/
+node_modules/
+demo/
 .project
