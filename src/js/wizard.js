@@ -187,7 +187,7 @@
 			
 			//HTML blocks : Left as null to allow overriding
 			floatingStepHTML      : null,
-			floatingStepHTML      : null,
+			anchoredStepHTML      : null,
 		}, options);
 		
 		
@@ -1571,8 +1571,8 @@
 				else
 				{
 					var $object = $(object); //Attempts to locate the object
-					if ($object.get(0) === undefined) 
-					{//No object is found yet. Initiating "wait for object" process..
+					if ( ($object === undefined) || ($object.get(0) === undefined) || (!($($object.get(0)).is(':visible'))) )
+					{//No object is found yet, or object is invisible. Initiating "wait for object" process..
 						//Initiates structure
 						var that = this;
 						this._highlightExpected = {
@@ -1581,8 +1581,8 @@
 								function()
 								{
 									var $object = $(that._highlightExpected.object); //Attempt to locate the object 
-									if (!($object.get(0) === undefined))
-									{//If found...
+									if ( ($object.get(0) !== undefined) && ($($object.get(0)).is(':visible')) )
+									{//If found and is visible...
 										clearInterval(that._highlightExpected.handler); //Clears the interval
 										that._highlightExpected = {}; //Clears the highlightExpected structure
 										that.highlight($object); //Sets the highlight
@@ -1606,7 +1606,7 @@
 						this._adjustHighlight();
 					}
 					else 
-					{//Highlight object was found
+					{//Highlight object was found, and is visible
 						this._highlightExpected = {};  //Clears the highlightExpected structure
 						object = $object; //Goes with the object by Object instead of selector
 					}
