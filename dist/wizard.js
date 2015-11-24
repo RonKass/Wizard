@@ -656,7 +656,7 @@
 			$box
 				.find('.wizardClose')
 				.html(closeLabel)
-				.toggleClass("wizardStepDisabled",showClose);
+				.toggleClass("wizardStepDisabled",!showClose);
 		},
 
 		/**
