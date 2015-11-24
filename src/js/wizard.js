@@ -656,7 +656,7 @@
 			$box
 				.find('.wizardClose')
 				.html(closeLabel)
-				.toggle(showClose);
+				.toggleClass("wizardStepDisabled",showClose);
 		},
 
 		/**
@@ -707,7 +707,8 @@
 
 			var frameWidth, frameHeight,
 			    shiftH, shiftV,
-			    pH, pV;
+			    pH, pV,
+			    nudge;
 			var $frameContainer  = this._highlightAdjustment.frameContainer;
 			
 			if (((position === "auto") && (this._highlightAdjustment.object === '#')) || (!$frameContainer)) 
@@ -727,10 +728,39 @@
 					var spaceRight  = $body.width()  - $frameContainer.position().left - frameWidth;
 					var allSides = spaceTop + spaceLeft + spaceBottom + spaceRight; 
 					
-					if      (spaceTop *4  >= allSides) {position = 'top';}
-					else if (spaceLeft*4  >= allSides) {position = 'left';}
-					else if (spaceRight*4 >= allSides) {position = 'right';}
-					else                               {position = 'bottom';}
+					//finding ideal position
+					if      (spaceTop    *4  >= allSides) {position = 'top';}
+					else if (spaceBottom *4  >= allSides) {position = 'bottom';}
+					else if (spaceLeft   *4  >= allSides) {position = 'left';}
+					else if (spaceRight  *4  >= allSides) {position = 'right';}
+
+					switch (position)
+					{//Box might not fit next to the idea position (might shift off screen)
+						case 'top'    :
+						case 'bottom' :
+							if ((spaceRight < stepWidth/2) || (spaceLeft < stepWidth/2)) 
+							{
+								if      ((spaceRight > stepWidth/2) && (spaceTop > stepHeight/2) && (spaceBottom > stepHeight/2)) {position='right';}
+								else if ((spaceLeft  > stepWidth/2) && (spaceTop > stepHeight/2) && (spaceBottom > stepHeight/2)) {position='left';}
+								else
+								{
+									nudge = (spaceRight>spaceLeft)?"right":"left";
+								}
+							}
+							break;
+						case 'left'   :
+						case 'right'  :
+							if ((spaceTop < stepHeight/2) || (spaceBottom < stepHeight/2)) 
+							{
+								if      ((spaceTop    > stepHeight/2) && (spaceLeft > stepWidth/2) && (spaceRight > stepWidth/2)) {position='top';}
+								else if ((spaceBottom > stepHeight/2) && (spaceLeft > stepWidth/2) && (spaceRight > stepWidth/2)) {position='bottom';}
+								else
+								{
+									nudge = (spaceTop>spaceBottom)?"top":"bottom";
+								}
+							}
+							break;
+					}
 				}
 				step._positionActual = position; //_positionActual may differ if position was invalid or was set to 'auto'
 				
@@ -747,10 +777,10 @@
 				case 'screenTopRight'   : shiftH = -pH; shiftV =  pV; break;
 
 				default       : 
-				case 'bottom' : shiftH =  parseInt((frameWidth  - stepWidth )/2); shiftV =  pV + frameHeight; break;
-				case 'right'  : shiftV =  parseInt((frameHeight - stepHeight)/2); shiftH =  pH + frameWidth;  break;
-				case 'left'   : shiftV =  parseInt((frameHeight - stepHeight)/2); shiftH = -pH - stepWidth;   break;
-				case 'top'    : shiftH =  parseInt((frameWidth  - stepWidth )/2); shiftV = -pV - stepHeight;  break;
+				case 'bottom' : shiftH =  (nudge==='right')?0:((nudge==='left')?-stepWidth:parseInt((frameWidth  - stepWidth )/2));  shiftV =  pV + frameHeight; break;
+				case 'right'  : shiftV =  (nudge==='bottom')?0:((nudge==='top')?-stepHeight:parseInt((frameHeight - stepHeight)/2)); shiftH =  pH + frameWidth;  break;
+				case 'left'   : shiftV =  (nudge==='bottom')?0:((nudge==='top')?-stepHeight:parseInt((frameHeight - stepHeight)/2)); shiftH = -pH - stepWidth;   break;
+				case 'top'    : shiftH =  (nudge==='right')?0:((nudge==='left')?-stepWidth:parseInt((frameWidth  - stepWidth )/2));  shiftV = -pV - stepHeight;  break;
 			}
 
 			//Sets the position (relative to the highlight frame)
