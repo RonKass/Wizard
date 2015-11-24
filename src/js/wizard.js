@@ -168,6 +168,11 @@
 			finishLabel           : '<i class="fa fa-fw fa-flag-checkered"></i>',
 			closeLabel            : '<i class="fa fa-fw fa-times"></i>',
 			headerTemplate        : '{{step}}/{{steps}}',
+			//Offsets
+			offsetLeft            : 4,
+			offsetTop             : 5,
+			offsetRight           : 6,
+			offsetBottom          : 5,
 
 			//Callbacks :: Wizard
 			onWizardStart         : $.noop,
@@ -1697,12 +1702,18 @@
 			else
 			{
 				var object = struct.object;
+				var step = this.getCurrentStep();
+				
+				var counted_x = (step.offsetLeft || this.settings.offsetLeft);
+				var counted_y = (step.offsetTop || this.settings.offsetTop);
+				var counted_w = (step.offsetRight || this.settings.offsetRight) + counted_x;
+				var counted_h = (step.offsetBottom || this.settings.offsetBottom) + counted_y;
 	
 				var offset = object.offset();
-				var x = parseInt(offset.left)-4;
-				var y = parseInt(offset.top)-5;
-				var w = parseInt(object.outerWidth())+10;
-				var h = parseInt(object.outerHeight())+10;
+				var x = parseInt(offset.left)-counted_x;
+				var y = parseInt(offset.top)-counted_y;
+				var w = parseInt(object.outerWidth())+counted_w;
+				var h = parseInt(object.outerHeight())+counted_h;
 	
 				//change in offset?
 				if (
