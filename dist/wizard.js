@@ -36,6 +36,7 @@
 //      The structure is examined when the Wizard script finishes loading and if exists reruns the stored wizard from the last set step
 //TODO: Consider making position:auto turn into position:screenCenter if set on a step without an element
 //TODO: Add screenTop/Left/Right/Bottom positions
+//TODO: Add fixed position "element" awareness (relative [top/right/left/bottom/auto] need to also be fixed)
 //LOW:
 //TODO: Consider adding non-element step with darkened background
 //TODO: Add additional CountDown visual options
@@ -142,7 +143,8 @@
 			enableKeyBinding      : true,    //Allow keyboard use for step navigation, and wizard pause/resume and stop
 			freezeKeyBinding      : false,   //Temporary freezing of key binding
 			abortOnInvalidStep    : false,   //Aborts Wizard when a step is Invalid
-			deactivationDelay     : 250,     //Allows a small delay in deactivation, to let animations run their course 
+			deactivationDelay     : 250,     //Allows a small delay in deactivation, to let animations run their course
+			allowMouseDown        : false,   //Does not allow mousedown on wizard's Floating box [prevents highlighting and inputs-focus]
 
 			//Structural
 			template              : 'wizardWide',
@@ -337,8 +339,15 @@
 				this.$floatingStepContainer = $floatingStepContainer;
 				this.$floatingStepBox       = $floatingStepBox;
 
-				//Disable highlight hide on mouseDown
-				$floatingStepBox.on('mousedown.Wizard', function(){return false;});
+				//Disable mouseDown interaction (disabling highlighting and focus on inputs)
+				$floatingStepBox.on('mousedown.Wizard', function(e){
+					if (!(
+						that.settings.allowMouseDown || 
+						that.getCurrentStep().allowMouseDown ||
+						($(e.target).parents('[data-wizard-mousedown]').length > 0)
+					))
+					{return false;}
+				});
 			}
 			//Attach events (close/next/prev)
 			this._attachStepBoxEvents(this.$floatingStepBox);
@@ -392,7 +401,11 @@
 				this.$overlay = $overlay;
 				
 				var that = this;
-				$overlay.on('mousedown.Wizard', function(){that.settings.onOverlayClick(that);});
+				$overlay.on('mousedown.Wizard', function(e){
+					var $target = $(e.target);
+					if ($target.hasClass('.wizardOverlay') || $target.hasClass('_g'))
+						{that.settings.onOverlayClick(that);}
+				});
 			}
 		},
 
@@ -465,7 +478,8 @@
 		 */
 		_keyEvent: function(e) 
 		{
-			if (this.freezeKeyBinding) {return;} //Ignores keyEvents if temporarily frozen
+			if (this.freezeKeyBinding)    {return;} //Ignores keyEvents if temporarily frozen
+			if ($(e.target).is(':input')) {return;} //Ignores keyEvents while inside an input
 
 			var keys = _constants.keyboard;
 			switch (e.which) 
@@ -711,7 +725,10 @@
 			    nudge;
 			var $frameContainer  = this._highlightAdjustment.frameContainer;
 			
-			if (((position === "auto") && (this._highlightAdjustment.object === '#')) || (!$frameContainer)) 
+			if (
+					(((position === "auto") || (position === "screenCenter")) && (this._highlightAdjustment.object === '#')) || 
+					(!$frameContainer)
+				) 
 				{position = "screenCenter";} //If no highlight frame to attach to, put the Step box at the screen center
 			else
 			{//Calculate position related variables
@@ -1131,15 +1148,18 @@
 		 */
 		_pauseToggle: function() 
 		{
-			if (this.isCountdown) 
+			if (this._countdown)
 			{
-				this._countdown.pause();
-				this._pauseCountDowns();
+				if (this.isCountdown) 
+				{
+					this._countdown.pause();
+					this._pauseCountDowns();
+				}
+				else
+					{this._resumeCountDowns(this._countdown.resume());}
+				
+				this.isCountdown = !this.isCountdown;
 			}
-			else 
-				{this._resumeCountDowns(this._countdown.resume());}
-			
-			this.isCountdown = !this.isCountdown;
 		},
 	
 		/**
