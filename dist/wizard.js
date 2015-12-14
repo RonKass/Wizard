@@ -1481,7 +1481,7 @@
 			
 			this._rescrollAllowed = true; //Allows rescroll
 
-			var duration   = step.duration     || this.settings.autoCountdownDuration;
+			var duration = parseInt(step.duration || this.settings.autoCountdownDuration);
 			if (duration<100) {duration = duration * 1000;} //duration under 100 is assumed to be seconds, and not milliseconds
 
 			var that = this;
